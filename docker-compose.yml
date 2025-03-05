@@ -1,4 +1,11 @@
 version: '3.8'
+
+networks:
+  internal_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 services:
   app:
     build: .
@@ -11,9 +18,12 @@ services:
       - .:/app
       - ./.m2:/root/.m2
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/product
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/produtos
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      internal_network:
+        ipv4_address: 172.28.0.2
 
   db:
     image: postgres:15
@@ -21,12 +31,15 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: product
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: produtos
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      internal_network:
+        ipv4_address: 172.28.0.3
 
   pgadmin:
     image: dpage/pgadmin4
@@ -34,11 +47,14 @@ services:
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: 123
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "8080:80"
     depends_on:
       - db
+    networks:
+      internal_network:
+        ipv4_address: 172.28.0.4
 
 volumes:
   postgres_data:
